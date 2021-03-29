@@ -21,8 +21,7 @@ class Drone(Hive):
         self.__dict__[key] = value
 
     def assimilate(self, other: object, designation: str) -> None:
-        """Copies the '__dict__' of an object passed in if the object contains said attribute, then reassigns the
-        internal '__dict__' to the shared dict-Assimilating this. Ignores otherwise"""
+        """Copies the '__dict__' of an object passed in if the object contains said attribute. Ignores otherwise"""
         if hasattr(other, "__dict__"):
             self.set(designation, other.__dict__)
 
