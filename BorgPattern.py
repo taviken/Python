@@ -27,7 +27,6 @@ class Drone(Hive):
 
     def __init__(self) -> None:
         super().__init__()
-        self.__dict__ = self._shared_dict
 
     def __iter__(self) -> tuple:
         """Yields key value tuple of the shared dict"""
