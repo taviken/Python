@@ -75,6 +75,17 @@ class Logs(type):
                 attrs[key] = _logs(value)
         return super().__new__(cls, name, bases, attrs)
 
+class __private_attrs__(type):
+    def __new__(cls, name, bases = (), attrs = {}):
+        temp_dict = {}
+        for attr, obj in attrs.items():
+            temp_dict["_"+attr] = obj
+        return super().__new__(cls, name , bases, temp_dict)
+
+class private(metaclass=__private_attrs__):
+    def name(self):
+
+
 
 if __name__ == '__main__':
     class foo(metaclass=Logs):
