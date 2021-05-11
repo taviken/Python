@@ -4,14 +4,14 @@ import multiprocessing as mp
 _cores = mp.cpu_count()
 
 
-def _mine(block, nonces, key, hasher, event: mp.Event):
+def _mine(block, nonces, key, hasher, event: mp.Event, queue: mp.Queue):
     for nonce in nonces:
         if event.is_set():
             break
         hash_ = hash_block(block, nonce, hasher)
         if hash_.startswith(key):
             event.set()
-            return nonce, hash_
+            queue.put((nonce, hash_))
     return None, None
 
 
@@ -26,7 +26,6 @@ def multi_mine(block, key, hasher):
     event = mp.Event()
     nonce_set = _gen_nonces(_cores)
     processes = [mp.Process(target=_mine, args=(block, nonces, key, hasher, event)) for nonces in nonce_set]
-
 
 
 def _gen_nonces(cores):
