@@ -1,51 +1,73 @@
 import hashlib
 import json
 import time
-from collections import namedtuple
-
-_hash = hashlib.sha256
-_block_data = namedtuple('_block_data', ['index', 'data', 'timestamp', 'previous_hash', 'nonce'])
 
 
 class Block:
-    def __init__(self, index: int, data: "hashable object", timestamp: float, previous_hash: str, **options):
-        self._hash_method = options.get('hash', 'sha256')
-        self.index = index
+    __slots__ = 'data', 'timestamp', 'previous_hash', 'nonce', '_hash'
+
+    def __init__(self, data, timestamp, previous_hash, nonce):
+        self.nonce = nonce
         self.data = data
         self.timestamp = timestamp
         self.previous_hash = previous_hash
-        self.nonce = 0
+        self._hash = None
 
-    def __repr__(self):
-        return f'{self.__class__.__name__}: {self.hash}'
-    
     @property
-    def asdict(self) -> dict:
-        return {'index': self.index,
-                'data': self.data,
-                'timestamp': self.timestamp,
-                'previous_hash': self.previous_hash,
+    def hash(self):
+        return self._hash
+
+    def update_hash(self, hash_):
+        self._hash = hash_
+
+    @property
+    def asdict(self):
+        return {'data': self.data, 'timestamp': self.timestamp, 'previous_hash': self.previous_hash,
                 'nonce': self.nonce}
 
-    @property
-    def block_string(self) -> str:
-        string = json.dumps(self.asdict, sort_keys=True)
-        return string
+
+def _timestamp():
+    return time.time()
+
+
+def _get_hasher(algorithm):
+    return hashlib.new(algorithm)
+
+
+class BlockChain:
+    def __init__(self, **options):
+        self.key = options.get('key', 'beef')
+        self.hashing_alg = options.get('hash', 'sha256')
+        self.chain = []
+        self._create_genesis_block()
 
     @property
-    def hash(self) -> str:
-        block_string = self.block_string
-        digest = _hash
-        return _hash(block_string.encode()).hexdigest()
+    def last_block(self):
+        return self.chain[-1]
 
-    def increment_nonce(self) -> None:
-        self._nonce += 1
+    @property
+    def tojson(self):
+        raise NotImplementedError
 
+    def _create_genesis_block(self):
+        genesis_block = Block(data='genesis_block',
+                              timestamp=_timestamp(),
+                              previous_hash=self.key,
+                              nonce=0)
+        genesis_block.update_hash('0')
+        self.chain.append(genesis_block)
 
-class BlockChain: pass
+    def add_data(self, data):
+        last_block = self.last_block
+        block = Block(data, _timestamp(), last_block.previous_hash, 0)
+        nonce, hash_ = self.mine(block)
+
+    def mine(self, block):
+        hasher = _get_hasher(self.hashing_alg)
 
 
 class _Block:
+    raise NotImplementedError
     def __init__(self, index, transactions, timestamp, previous_hash, nonce=0):
         self.index = index
         self.transactions = transactions
