@@ -34,7 +34,7 @@ def mine(block,start,stop,queue,event, key,ID):
 def main():
     key = 'beef'
     e = mp.Event()
-    b = Block({'trevor gives addison $20':'bar','nonce':0})
+    b = Block({'data':'trevor gives addison $20','nonce':0})
     q=mp.Queue()
     p1 = mp.Process(target = mine, args = (b,0,5_000_000,q,e,key,1))
     p2 = mp.Process(target = mine, args = (b,5_000_000,10_000_000,q,e,key,2))
