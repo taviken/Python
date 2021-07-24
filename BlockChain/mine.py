@@ -24,9 +24,14 @@ def hash_block(block, nonce, hasher) -> str:
 
 def multi_mine(block, key, hasher):
     event = mp.Event()
-    nonce_set = _gen_nonces(_cores)
+    nonce_set = _get_nonces(1_000_000)
     processes = [mp.Process(target=_mine, args=(block, nonces, key, hasher, event)) for nonces in nonce_set]
 
 
-def _gen_nonces(cores):
-    raise NotImplementedError
+def _get_nonces(size):
+    start = 0
+    end = size
+    while True:
+        yield start, end
+        start += size
+        end += size
