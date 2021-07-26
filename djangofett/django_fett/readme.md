@@ -1,1 +1,1 @@
-Basic blog website. Corey Schaefer tutorial
+*Basic blog website.* Corey Schaefer tutorial
