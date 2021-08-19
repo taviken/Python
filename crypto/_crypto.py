@@ -31,9 +31,9 @@ class Crypt:
 
     def sign(self, message: bytes):
         signature = self._private.sign(
-            message,
-            _PSS_padding,
-            hashes.SHA256()
+            data=message,
+            padding=_PSS_padding,
+            algorithm=hashes.SHA256()
         )
         return signature
 
@@ -41,7 +41,10 @@ class Crypt:
         pub = self._private.public_key()
         verified = True
         try:
-            pub.verify(signature, message, _PSS_padding, hashes.SHA256())
+            pub.verify(signature=signature,
+                       data=message,
+                       padding=_PSS_padding,
+                       algorithm=hashes.SHA256())
         except InvalidSignature:
             verified = False
         return verified
@@ -49,12 +52,12 @@ class Crypt:
     def encrypt(self, message: bytes):
         pubkey = self._private.public_key()
         return pubkey.encrypt(
-            message,
-            _OAEP_padding
+            plaintext=message,
+            padding=_OAEP_padding
         )
 
     def decrypt(self, ciphertext: bytes):
         return self._private.decrypt(
-            ciphertext,
-            _OAEP_padding
+            ciphertext=ciphertext,
+            padding=_OAEP_padding
         )

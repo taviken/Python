@@ -20,6 +20,11 @@ posts = [
 
 
 def home(request) -> HttpResponse:
+    """
+    Returns the home page view upon a navigation request
+    :param request:
+    :return: django.http.HttpResponse
+    """
     context = {
         #'posts': posts
         'posts': Post.objects.all(),

@@ -82,9 +82,6 @@ class __private_attrs__(type):
             temp_dict["_"+attr] = obj
         return super().__new__(cls, name , bases, temp_dict)
 
-class private(metaclass=__private_attrs__):
-    def name(self):
-
 
 
 if __name__ == '__main__':
