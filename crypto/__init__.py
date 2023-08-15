@@ -1,8 +1,8 @@
 import importlib
-import crypto._crypto
+import _crypto
 
-importlib.reload(crypto._crypto)
-from crypto._crypto import (
+importlib.reload(_crypto)
+from _crypto import (
     Crypt,
 )
 
