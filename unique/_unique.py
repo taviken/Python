@@ -11,7 +11,7 @@ def make_unique(*,key):
         def __call__(cls,*a,**k):
             inst = super().__call__(*a,**k)
             key_ = getattr(inst,key)
-            if key_ in Unique._ids:
+            if key_ in MetaUnique._ids:
                 raise UniqueValueError(f"{key_} already taken")
             MetaUnique._ids.add(key_)
             return inst
