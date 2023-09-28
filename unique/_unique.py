@@ -13,7 +13,7 @@ def make_unique(*,key):
             key_ = getattr(inst,key)
             if key_ in Unique._ids:
                 raise UniqueValueError(f"{key_} already taken")
-            Unique._ids.add(key_)
+            MetaUnique._ids.add(key_)
             return inst
     return MetaUnique
 
