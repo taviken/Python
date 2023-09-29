@@ -9,8 +9,6 @@ def make_unique(*, key):
     """Creates a metaclass with the uniquness pattern based on a given key"""
     class MetaUnique(type):
         """MetaUnique metaclass"""
-        # _req_key = key
-        # _instances = {}
         _ids = set()
 
         def __new__(mcs, *args, **kwargs):
@@ -20,8 +18,6 @@ def make_unique(*, key):
             if annotations is None:
                 raise UniqueValueError(
                     f"{mcs.__class__.__name__} must have '{key}' annotations")
-            # if key in annotations:
-            #     raise UniqueValueError(f"{key} already taken")
             inst = super().__new__(mcs, *args, **kwargs)
 
             return inst
