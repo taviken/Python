@@ -1,29 +1,61 @@
 """Module that contains recipes for unique classes"""
 
+
 class UniqueValueError(ValueError):
     """'Uniuq Subclass of ValueError"""
 
 
-def make_unique(*,key):
+# def make_unique(*,key):
+#     """Creates a metaclass with the uniquness pattern based on a given key"""
+#     class MetaUnique(type):
+#         """Unique meta class"""
+#         _req_key=key
+#         _ids=set()
+#         def __call__(cls,*a,**k):
+#             inst = super().__call__(*a,**k)
+#             key_ = getattr(inst,key)
+#             if key_ in MetaUnique._ids:
+#                 raise UniqueValueError(f"{key_} already taken")
+#             MetaUnique._ids.add(key_)
+#             return inst
+
+#         def __del__(cls):
+#             key_ = getattr(cls,key)
+#             if key_ in MetaUnique._ids:
+#                 MetaUnique._ids.discard(cls)
+#     return MetaUnique
+
+# class foo(metaclass=make_unique(key='name')):
+#     def __init__(self, name:str):
+#         self.name = name
+
+def make_unique(*, key):
     """Creates a metaclass with the uniquness pattern based on a given key"""
     class MetaUnique(type):
-        """Unique meta class"""
-        _req_key=key
-        _ids=set()
-        def __call__(cls,*a,**k):
-            inst = super().__call__(*a,**k)
-            key_ = getattr(inst,key)
-            if key_ in MetaUnique._ids:
-                raise UniqueValueError(f"{key_} already taken")
-            MetaUnique._ids.add(key_)
+        """MetaUnique metaclass"""
+        # _req_key = key
+        # _instances = {}
+        _ids = set()
+
+        def __new__(mcs, *args, **kwargs):
+
+            _, _, dict_ = args
+            annotations = dict_.get('__annotations__')
+            if annotations is None:
+                raise UniqueValueError(
+                    f"{mcs.__class__.__name__} must have '{key}' annotations")
+            # if key in annotations:
+            #     raise UniqueValueError(f"{key} already taken")
+            inst = super().__new__(mcs, *args, **kwargs)
+
             return inst
 
-        def __del__(cls):
-            key_ = getattr(cls,key)
-            if key_ in MetaUnique._ids:
-                MetaUnique._ids.discard(cls)
-    return MetaUnique
+        def __call__(cls, *args, **kwargs):
+            inst = super().__call__(*args, **kwargs)
+            attr = getattr(inst, key)
+            if attr in MetaUnique._ids:
+                raise UniqueValueError(f"'{attr}' already taken")
+            MetaUnique._ids.add(attr)
+            return inst
 
-class foo(metaclass=make_unique(key='name')):
-    def __init__(self, name:str):
-        self.name = name
+    return MetaUnique
