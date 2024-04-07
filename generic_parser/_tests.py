@@ -10,7 +10,7 @@ keywords = [
 
 symbols = {
     "EQ": "=",
-    "Plus": "[+]",
+    "Plus": r"\+",
     "Minus": "-",
     "LeftBrace": "{",
     "RightBrace": "}",
@@ -18,7 +18,7 @@ symbols = {
     "RightBracket": "]",
     "ForwardSlash": "/",
     "BackSlash": "\\",
-    "Quote": "'",
+    "Quote": r'\"',
 }
 
 rules = {
