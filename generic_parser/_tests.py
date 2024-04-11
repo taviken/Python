@@ -1,31 +1,32 @@
 import pytest
-from generic_parser import Lexer, Token
+from generic_parser import Lexer, Token, Lexicon
 
-keywords = [
-    "long",
-    "short",
-    "unsigned",
-    "module",
-]
-
-symbols = {
-    "EQ": "=",
-    "Plus": r"\+",
-    "Minus": "-",
-    "LeftBrace": "{",
-    "RightBrace": "}",
-    "LeftBracket": "[",
-    "RightBracket": "]",
-    "ForwardSlash": "/",
-    "BackSlash": "\\",
-    "Quote": r"\"",
-}
-
-rules = {
-    "whitespace": " |\t",
-    "alpha": "[A-Za-z_]+",
-    "numeric": "[0-9]+",
-}
+lexicon = Lexicon(
+    keywords=[
+        "long",
+        "short",
+        "unsigned",
+        "module",
+    ],
+    symbols={
+        "EQ": r"\=",
+        "Plus": r"\+",
+        "Minus": r"\-",
+        "LeftBrace": "{",
+        "RightBrace": "}",
+        "LeftBracket": r"\[",
+        "RightBracket": r"\]",
+        "ForwardSlash": r"/",
+        "BackSlash": r"\\",
+        "Quote": r"\"",
+        "Start": r"\*",
+    },
+    rules={
+        "whitespace": " |\t",
+        "alpha": "[A-Za-z_]+",
+        "numeric": "[0-9]+",
+    },
+)
 
 source = [
     " module test12345 { ",
@@ -35,28 +36,29 @@ source = [
 
 
 def test_lexer():
-    lexer = Lexer(source, rules, keywords, symbols)
-    lexer.run()
+    lexer = Lexer(source, lexicon)
+
     actual_tokens = lexer.tokens
     expected_tokens = [
-        Token(" ", "whitespace", 1, (0, 1)),
-        Token("module", "module", 1, (1, 6)),
-        Token(" ", "whitespace", 1, (6, 7)),
-        Token("test", "alpha", 1, (7, 11)),
-        Token("12345", "numeric", 1, (0, 1)),
-        Token(" ", "whitespace", 1, (0, 1)),
-        Token("{", "LeftBrace", 1, (0, 1)),
-        Token(" ", "whitespace", 1, (0, 1)),
-        Token("\t", "whitespace", 2, (0, 1)),
-        Token("unsigned", "unsigned", 2, (0, 1)),
-        Token(" ", "whitespace", 2, (0, 1)),
-        Token("long", "long", 2, (0, 1)),
-        Token("var", "alpha", 2, (0, 1)),
-        Token(" ", "whitespace", 2, (0, 1)),
-        Token("42", "numeric", 2, (0, 1)),
-        Token(";", "Semicolon", 2, (0, 1)),
-        Token("}", "RightBrace", 2, (0, 1)),
-        Token(";", "Semicolon", 2, (0, 1)),
+        Token(text=" ", kind="whitespace", lineno=0, span=(0, 1)),
+        Token(text="module", kind="module", lineno=0, span=(1, 7)),
+        Token(text=" ", kind="whitespace", lineno=0, span=(7, 8)),
+        Token(text="test", kind="alpha", lineno=0, span=(8, 12)),
+        Token(text="12345", kind="numeric", lineno=0, span=(12, 17)),
+        Token(text=" ", kind="whitespace", lineno=0, span=(17, 18)),
+        Token(text="{", kind="LeftBrace", lineno=0, span=(18, 19)),
+        Token(text=" ", kind="whitespace", lineno=0, span=(19, 20)),
+        Token(text="\t", kind="whitespace", lineno=1, span=(0, 1)),
+        Token(text="unsigned", kind="unsigned", lineno=1, span=(1, 9)),
+        Token(text=" ", kind="whitespace", lineno=1, span=(9, 10)),
+        Token(text="long", kind="long", lineno=1, span=(10, 14)),
+        Token(text=" ", kind="whitespace", lineno=1, span=(14, 15)),
+        Token(text="var", kind="alpha", lineno=1, span=(15, 18)),
+        Token(text=" ", kind="whitespace", lineno=1, span=(18, 19)),
+        Token(text="=", kind="EQ", lineno=1, span=(19, 20)),
+        Token(text=" ", kind="whitespace", lineno=1, span=(20, 21)),
+        Token(text="42", kind="numeric", lineno=1, span=(21, 23)),
+        Token(text="}", kind="RightBrace", lineno=2, span=(0, 1)),
     ]
 
     assert expected_tokens == actual_tokens

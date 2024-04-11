@@ -1,8 +1,9 @@
 import re
-from typing import List, Dict, Set, Iterator, Tuple
+from typing import List, Dict, Tuple, Union
 from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
+from traceback import format_exc
 
 Token = namedtuple("Token", ["text", "kind", "lineno", "span"])
 
@@ -14,27 +15,31 @@ class Lexicon:
     rules: Dict[str, str]
 
 
-_default_lexicon = Lexicon(keywords=["long",                                     "short",                                     "unsigned",
-                                     "module",
-                                     ]
-
-                           symbols={"EQ": "=",
-                                    "Plus": "\+",
-                                    "Minus": "-",
-                                    "LeftBrace": "{",
-                                    "RightBrace": "}",
-                                    "LeftBracket": "[",
-                                    "RightBracket": "]",
-                                    "ForwardSlash": "/",
-                                    "BackSlash": "\\",
-                                    "Quote": '"',
-                                    }
-
-                           rules={"whitespace": " |\t",
-                                  "alpha": "[A-Za-z_]+",
-                                  "numeric": "[0-9]+",
-                                  }
-                           )
+_default_lexicon = Lexicon(
+    keywords=[
+        "long",
+        "short",
+        "unsigned",
+        "module",
+    ],
+    symbols={
+        "EQ": r"\=",
+        "Plus": r"\+",
+        "Minus": r"\-",
+        "LeftBrace": r"\{",
+        "RightBrace": r"\}",
+        "LeftBracket": r"\[",
+        "RightBracket": r"\]",
+        "ForwardSlash": "/",
+        "BackSlash": "\\",
+        "Quote": '"',
+    },
+    rules={
+        "whitespace": " |\t",
+        "alpha": "[A-Za-z_]+",
+        "numeric": "[0-9]+",
+    },
+)
 
 
 class LexicalError(Exception):
@@ -54,17 +59,30 @@ class Lexer:
         self.symbols = None
         self._lexicon = None
         self.lexicon = lexicon
-        self._process_keywords(keywords=keywords)
-        self._process_rules(rules=rules)
-        self._process_symbols(symbols=symbols)
-        self.run()
+        self.parts = []
+        self._process_keywords(keywords=lexicon.keywords)
+        self._process_rules(rules=lexicon.rules)
+        self._process_symbols(symbols=lexicon.symbols)
+
         self._tokens = []
 
-        parts = []
-        parts.extend(self.symbols.values())
-        parts.extend(self.keywords.values())
-        parts.extend(self.rules.values())
-        self._lexing_pattern = re.compile("|".join(parts))
+        # parts.extend(self.symbols.values())
+        # parts.extend(self.keywords.values())
+        # parts.extend(self.rules.values())
+
+        # pre check compilation
+        for part in self.parts:
+            try:
+                re.compile(part)
+            except Exception:
+                exc = format_exc()
+                msg = f"failed to compile phrase: {part}.\n"
+                print(f"Traceback:\n{exc}")
+                raise LexicalError(msg)
+
+        self._lexing_pattern = re.compile("|".join(self.parts))
+
+        self.run()
 
     @property
     def lexicon(self) -> Lexicon:
@@ -83,21 +101,25 @@ class Lexer:
             raise LexicalError(msg)
 
     @classmethod
-    def manual_parameters(cls,
-                          source: List[str],
-                          rules: List[Tuple[str, str]],
-                          keywords: List[str],
-                          symbols: List[Tuple[str, str]],
-                          **options):
+    def manual_parameters(
+        cls,
+        source: List[str],
+        rules: List[Tuple[str, str]],
+        keywords: List[str],
+        symbols: List[Tuple[str, str]],
+        **options,
+    ) -> "Lexer":
         lexicon = Lexicon(keywords=keywords, symbols=symbols, rules=rules)
-        return cls(source, Lexicon, **options)
+        return cls(source, lexicon, **options)
 
     @classmethod
-    def from_file(cls, filepath: Path, lexicon: Lexicon, **options):
-        mode = options.get('mode', 'r')
+    def from_file(
+        cls, filepath: Path, lexicon: Lexicon, **options
+    ) -> Union["Lexer", None]:
+        mode = options.get("mode", "r")
         with open(filepath, mode) as f:
             source = f.readlines()
-            lexcer = cls(source=source, lexicon=lexicon, **options)
+            return cls(source=source, lexicon=lexicon, **options)
 
     @property
     def tokens(self) -> List[Token]:
@@ -106,25 +128,25 @@ class Lexer:
     def _process_symbols(self, symbols):
         for kind, symbol in symbols.items():
             pattern = f"(?P<{kind}>{symbol})"
-            self.symbols[kind] = pattern
+            self.parts.append(pattern)
 
     def _process_keywords(self, keywords):
+
         for word in keywords:
             pattern = f"(?P<{word}>{word})"
-            self.keywords[word] = pattern
+            self.parts.append(pattern)
 
     def _process_rules(self, rules):
         for word, pattern in rules.items():
             group_pattern = f"(?P<{word}>{pattern})"
-            self.rules[word] = group_pattern
+            self.parts.append(group_pattern)
 
     def run(self):
         for lineno, line in enumerate(self._source):
             regex_match = True
             current_position = 0
             while regex_match is not None:
-                regex_match = self._lexing_pattern.search(
-                    line, current_position)
+                regex_match = self._lexing_pattern.search(line, current_position)
                 if regex_match is not None:
                     current_position = regex_match.end()
                     self._make_token(regex_match, lineno)
