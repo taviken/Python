@@ -18,7 +18,7 @@ symbols = {
     "RightBracket": "]",
     "ForwardSlash": "/",
     "BackSlash": "\\",
-    "Quote": r'\"',
+    "Quote": r"\"",
 }
 
 rules = {
