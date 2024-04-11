@@ -1,5 +1,5 @@
 import pytest
-from generic_parser import Lexer, Token, Lexicon
+from peg_parser import Lexer, Token, Lexicon
 
 lexicon = Lexicon(
     keywords=[
