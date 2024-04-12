@@ -1,6 +1,6 @@
 import re
 from typing import List, Dict, Tuple, Union
-from collections import namedtuple
+from collections import namedtuple, deque
 from dataclasses import dataclass
 from pathlib import Path
 from traceback import format_exc
@@ -46,6 +46,24 @@ class LexicalError(Exception):
     pass
 
 
+class TokenSet:
+    _tokens: List[Token]
+
+    def __init__(self, tokens: List[Token]):
+        self._tokens = deque(tokens)
+        self._stack = deque()
+
+    def get_token(self):
+        if self._tokens:
+            token = self._tokens.popleft()
+            self._stack.append(token)
+            return token
+
+    def peek_token(self):
+        if self._tokens:
+            return self._tokens[0]
+
+
 class Lexer:
     def __init__(
         self,
@@ -53,6 +71,7 @@ class Lexer:
         lexicon: Lexicon,
     ):
         self._source = source.copy()
+        self.pos = 0
 
         self.rules = None
         self.keywords = None
@@ -83,6 +102,12 @@ class Lexer:
         self._lexing_pattern = re.compile("|".join(self.parts))
 
         self.run()
+
+    def mark(self):
+        return self.pos
+
+    def reset(self, pos):
+        self.pos = pos
 
     @property
     def lexicon(self) -> Lexicon:
@@ -124,6 +149,10 @@ class Lexer:
     @property
     def tokens(self) -> List[Token]:
         return self._tokens
+
+    @property
+    def tokenset(self) -> TokenSet:
+        return TokenSet(self.tokens)
 
     def _process_symbols(self, symbols):
         for kind, symbol in symbols.items():
