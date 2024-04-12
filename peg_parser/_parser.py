@@ -1,6 +1,7 @@
 from ._lexer import Lexer, Lexicon, _default_lexicon
 from dataclasses import dataclass
 from typing import List, Union, Any
+from functools import wraps
 
 grammar = [
     "statement: assignment | expr | if_statement",
@@ -20,6 +21,26 @@ meta_grammar = [
 ]
 
 
+def memoize(func):
+    @wraps
+    def memoize_wrapper(self, *args):
+        pos = self.mark()
+        memo = self.memos.get(pos)
+        if memo is None:
+            memo = self.memos[pos] = {}
+        key = (func, args)
+        if key in memo:
+            res, endpos = memo[key]
+            self.reset(endpos)
+        else:
+            res = func(self, *args)
+            endpos = self.mark()
+            memo[key] = res, endpos
+        return res
+
+    return memoize_wrapper
+
+
 @dataclass
 class Node:
     type: str
@@ -33,19 +54,13 @@ class Rule:
 
 
 class Parser:
-    def __init__(self, lexer):
-        self.lexer = lexer
-
-    def mark(self):
-        return self.lexer.mark()
-
-    def reset(self, pos):
-        self.lexer.reset(pos)
+    def __init__(self, lexer: Lexer):
+        self.tokenset = lexer.tokenset
 
     def expect(self, arg):
-        token = self.lexer.peek_token()
-        if token.type == arg or token.string == arg:
-            return self.lexer.get_token()
+        token = self.tokenset.peek_token()
+        if token.kind == arg or token.text == arg:
+            return self.tokenset.get_token()
         return None
 
 
