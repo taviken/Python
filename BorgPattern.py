@@ -1,5 +1,7 @@
 """Demonstration of the Borg pattern. Alternative solution to the singleton Pattern."""
 
+from typing import Tuple, Any
+
 
 class Hive:
     """Base Class. Contains a shared dict which all subclasses have access to."""
@@ -29,7 +31,7 @@ class Drone(Hive):
     def __init__(self) -> None:
         super().__init__()
 
-    def __iter__(self) -> tuple:
+    def __iter__(self) -> Tuple[Any, Any]:
         """Yields key value tuple of the shared dict"""
         for k, v in self.__dict__.items():
             yield k, v
