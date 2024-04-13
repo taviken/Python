@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Tuple, Optional
 from collections import namedtuple, deque
 from dataclasses import dataclass
 from pathlib import Path
@@ -50,18 +50,23 @@ class TokenSet:
     _tokens: List[Token]
 
     def __init__(self, tokens: List[Token]):
-        self._tokens = deque(tokens)
-        self._stack = deque()
+        self._tokens: List[Token] = tokens.copy()
+        self._current_pos: int = 0
 
-    def get_token(self):
-        if self._tokens:
-            token = self._tokens.popleft()
-            self._stack.append(token)
-            return token
+    def get_token(self) -> Token:
+        token = self.peek_token()
+        self._current_pos += 1
+        return token
 
-    def peek_token(self):
-        if self._tokens:
-            return self._tokens[0]
+    def reset(self, position: int) -> None:
+        self._current_pos = position
+
+    def mark(self) -> int:
+        return self._current_pos
+
+    def peek_token(self) -> Optional[Token]:
+        if self._current_pos < len(self._tokens):
+            return self._tokens[self._current_pos + 1]
 
 
 class Lexer:
@@ -140,7 +145,7 @@ class Lexer:
     @classmethod
     def from_file(
         cls, filepath: Path, lexicon: Lexicon, **options
-    ) -> Union["Lexer", None]:
+    ) -> Optional["Lexer"]:
         mode = options.get("mode", "r")
         with open(filepath, mode) as f:
             source = f.readlines()

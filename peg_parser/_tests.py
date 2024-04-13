@@ -1,41 +1,63 @@
 import pytest
-from peg_parser import Lexer, Token, Lexicon
+from peg_parser import Lexer, Token, Lexicon, GrammarParser
 
-lexicon = Lexicon(
-    keywords=[
-        "long",
-        "short",
-        "unsigned",
-        "module",
-    ],
-    symbols={
-        "EQ": r"\=",
-        "Plus": r"\+",
-        "Minus": r"\-",
-        "LeftBrace": "{",
-        "RightBrace": "}",
-        "LeftBracket": r"\[",
-        "RightBracket": r"\]",
-        "ForwardSlash": r"/",
-        "BackSlash": r"\\",
-        "Quote": r"\"",
-        "Start": r"\*",
-    },
-    rules={
-        "whitespace": " |\t",
-        "alpha": "[A-Za-z_]+",
-        "numeric": "[0-9]+",
-    },
-)
+ENDMARKER = "ENDMARKER"
+STRING = "STRING"
+NAME = "NAME"
+NEWLINE = "NEWLINE"
 
-source = [
-    " module test12345 { ",
-    "\tunsigned long var = 42;",
-    "};",
+grammar = [
+    "statement: assignment | expr | if_statement",
+    "expr: expr '+' term | expr '-' term | term",
+    "term: term '*' atom | term '/' atom | atom",
+    "atom: NAME | NUMBER | '(' expr ')'",
+    "assignment: target '=' expr",
+    "target: NAME",
+    "if_statement: 'if' expr ':' statement",
 ]
+
+meta_grammar = [
+    "grammar: rule+ ENDMARKER",
+    "rule: NAME ':' alternative ('|' alternative)* NEWLINE",
+    "alternative: item+",
+    "item: NAME | STRING",
+]
+symbols = {
+    "EQ": r"\=",
+    "Plus": r"\+",
+    "Minus": r"\-",
+    "LeftBrace": "{",
+    "RightBrace": "}",
+    "LeftBracket": r"\[",
+    "RightBracket": r"\]",
+    "ForwardSlash": r"/",
+    "BackSlash": r"\\",
+    "Quote": r"\"",
+    "Start": r"\*",
+}
+rules = {
+    "whitespace": " |\t",
+    "alpha": "[A-Za-z_]+",
+    "numeric": "[0-9]+",
+}
 
 
 def test_lexer():
+    lexicon = Lexicon(
+        keywords=[
+            "long",
+            "short",
+            "unsigned",
+            "module",
+        ],
+        symbols=symbols,
+        rules=rules,
+    )
+    source = [
+        " module test12345 { ",
+        "\tunsigned long var = 42;",
+        "};",
+    ]
     lexer = Lexer(source, lexicon)
 
     actual_tokens = lexer.tokens
@@ -62,3 +84,25 @@ def test_lexer():
     ]
 
     assert expected_tokens == actual_tokens
+
+
+def test_parser():
+    lexicon = Lexicon(
+        keywords=[
+            ENDMARKER,
+            STRING,
+            NAME,
+            NEWLINE,
+        ],
+        symbols=symbols,
+        rules=rules,
+    )
+    program = [
+        "stmt: asmt | expr\n",
+        "asmt: NAME '=' expr\n",
+        "expr: NAME\n",
+    ]
+    lexer = Lexer(program, lexicon)
+    parser = GrammarParser(lexer)
+    _rules = parser.grammar()
+    assert _rules is None
