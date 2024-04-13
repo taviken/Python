@@ -3,6 +3,7 @@
 
 class Hive:
     """Base Class. Contains a shared dict which all subclasses have access to."""
+
     _shared_dict = {}
 
     def __init__(self) -> None:
@@ -43,14 +44,14 @@ def main():
             self.name = name
             self.rank = rank
 
-    picard = Human('picard', 'captain')
+    picard = Human("picard", "captain")
 
     seven_of_nine = Drone()
-    seven_of_nine.assimilate(picard, 'Locutus')
+    seven_of_nine.assimilate(picard, "Locutus")
 
     hue = Drone()
-    print(f'Hue knows the following:\n {list(hue)}')
+    print(f"Hue knows the following:\n {list(hue)}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
