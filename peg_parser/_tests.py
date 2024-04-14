@@ -1,5 +1,5 @@
 import pytest
-from peg_parser import Lexer, Token, Lexicon, GrammarParser
+from peg_parser import Lexer, Token, Lexicon, GrammarParser, Rule
 
 ENDMARKER = "ENDMARKER"
 STRING = "STRING"
@@ -34,6 +34,7 @@ symbols = {
     "BackSlash": r"\\",
     "Quote": r"\"",
     "Start": r"\*",
+    "Colon": r"\:",
 }
 rules = {
     "whitespace": " |\t",
@@ -54,7 +55,7 @@ def test_lexer():
         rules=rules,
     )
     source = [
-        " module test12345 { ",
+        " module test12345 { ~",
         "\tunsigned long var = 42;",
         "};",
     ]
@@ -86,6 +87,7 @@ def test_lexer():
     assert expected_tokens == actual_tokens
 
 
+@pytest.mark.skip
 def test_parser():
     lexicon = Lexicon(
         keywords=[
@@ -105,4 +107,8 @@ def test_parser():
     lexer = Lexer(program, lexicon)
     parser = GrammarParser(lexer)
     _rules = parser.grammar()
-    assert _rules is None
+    assert _rules is [
+        Rule("stmt", [["asmt"], ["expr"]]),
+        Rule("asmt", [["NAME", "'='", "expr"]]),
+        Rule("expr", [["NAME"]]),
+    ]

@@ -87,12 +87,7 @@ class Lexer:
         self._process_keywords(keywords=lexicon.keywords)
         self._process_rules(rules=lexicon.rules)
         self._process_symbols(symbols=lexicon.symbols)
-
         self._tokens = []
-
-        # parts.extend(self.symbols.values())
-        # parts.extend(self.keywords.values())
-        # parts.extend(self.rules.values())
 
         # pre check compilation
         for part in self.parts:
@@ -183,6 +178,12 @@ class Lexer:
                 regex_match = self._lexing_pattern.search(line, current_position)
                 if regex_match is not None:
                     current_position = regex_match.end()
+                    hole = line[current_position : regex_match.start()]
+                    if hole:
+                        # hole found
+                        self._make_invalid_token(
+                            line, regex_match.start(), regex_match.end(), lineno
+                        )
                     self._make_token(regex_match, lineno)
 
     def _make_token(self, match, lineno):
@@ -190,4 +191,9 @@ class Lexer:
             (text, kind) for kind, text in match.groupdict().items() if text is not None
         ].pop()
         token = Token(text=text, kind=kind, lineno=lineno, span=match.span())
+        self._tokens.append(token)
+
+    def _make_invalid_token(self, line, start, end, lineno):
+        text = line[start:end]
+        token = Token(text=text, kind="INVALID", lineno=lineno, span=(start, end))
         self._tokens.append(token)

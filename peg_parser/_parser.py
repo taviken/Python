@@ -10,7 +10,7 @@ NEWLINE = "NEWLINE"
 
 
 def memoize(func):
-    @wraps
+    # @wraps
     def memoize_wrapper(self, *args):
         pos = self.mark()
         memo = self.memos.get(pos)
@@ -45,16 +45,19 @@ class Rule:
 
 
 class Parser:
-    def __init__(self, lexer: Lexer):
-        self.tokenset: TokenSet = lexer.tokenset
 
-    def mark(self) -> int:
+    def __init__(self, lexer):
+        self.tokenset = lexer.tokenset
+        self.memos = {}
+
+    def mark(self):
         return self.tokenset.mark()
 
-    def reset(self, position: int) -> None:
-        self.tokenset.reset(position)
+    def reset(self, pos):
+        self.tokenset.reset(pos)
 
-    def expect(self, arg) -> Optional[Token]:
+    @memoize
+    def expect(self, arg):
         token = self.tokenset.peek_token()
         if token.kind == arg or token.text == arg:
             return self.tokenset.get_token()
@@ -65,10 +68,13 @@ class GrammarParser(Parser):
 
     def grammar(self):
         pos = self.mark()
-        if rule := self.rule():
+        rule = self.rule()
+        if rule:
             rules = [rule]
-            while rule := self.rule():
+            rule = self.rule()
+            while rule:
                 rules.append(rule)
+                rule = self.rule()
             if self.expect(ENDMARKER):
                 return rules
         self.reset(pos)
@@ -76,29 +82,36 @@ class GrammarParser(Parser):
 
     def rule(self):
         pos = self.mark()
-        if name := self.expect(NAME):
+        name = self.expect(NAME)
+        if name:
             if self.expect(":"):
-                if alt := self.alternative():
+                alt = self.alternative()
+                if alt:
                     alts = [alt]
                     apos = self.mark()
-                    while self.expect("|") and (alt := self.alternative()):
+                    while self.expect("|") and alt:
                         alts.append(alt)
                         apos = self.mark()
+                        alt = self.alternative()
                     self.reset(apos)
                     if self.expect(NEWLINE):
-                        return Rule(name.string, alts)
+                        return Rule(name.text, alts)
         self.reset(pos)
         return None
 
     def alternative(self):
         items = []
-        while item := self.item():
+        item = self.item()
+        while item:
             items.append(item)
+            item = self.item()
         return items
 
     def item(self):
-        if name := self.expect(NAME):
-            return name.string
-        if string := self.expect(STRING):
-            return string.string
+        name = self.expect(NAME)
+        if name:
+            return name.text
+        string = self.expect(STRING)
+        if string:
+            return string.text
         return None
