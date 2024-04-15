@@ -1,18 +1,18 @@
 import re
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Iterator, IO
 from collections import namedtuple, deque
 from dataclasses import dataclass
 from pathlib import Path
 from traceback import format_exc
+import tokenize
 
-Token = namedtuple("Token", ["text", "kind", "lineno", "span"])
+Token = namedtuple("Token", ["text", "kind", "category", "lineno", "span"])
 
 
 @dataclass
 class Lexicon:
     keywords: List[str]
-    symbols: Dict[str, str]
-    rules: Dict[str, str]
+    rules: Dict[str, str] = None
 
 
 _default_lexicon = Lexicon(
@@ -22,24 +22,14 @@ _default_lexicon = Lexicon(
         "unsigned",
         "module",
     ],
-    symbols={
-        "EQ": r"\=",
-        "Plus": r"\+",
-        "Minus": r"\-",
-        "LeftBrace": r"\{",
-        "RightBrace": r"\}",
-        "LeftBracket": r"\[",
-        "RightBracket": r"\]",
-        "ForwardSlash": "/",
-        "BackSlash": "\\",
-        "Quote": '"',
-    },
-    rules={
-        "whitespace": " |\t",
-        "alpha": "[A-Za-z_]+",
-        "numeric": "[0-9]+",
-    },
+    rules=None,
 )
+
+token_lookup = {
+    getattr(tokenize, name): name
+    for name in dir(tokenize)
+    if isinstance(getattr(tokenize, name), int) and name.isupper()
+}
 
 
 class LexicalError(Exception):
@@ -47,153 +37,65 @@ class LexicalError(Exception):
 
 
 class TokenSet:
-    _tokens: List[Token]
+    tokens: List[Token]
 
     def __init__(self, tokens: List[Token]):
-        self._tokens: List[Token] = tokens.copy()
-        self._current_pos: int = 0
+        self.tokens: List[Token] = tokens.copy()
+        self.current_pos: int = 0
 
     def get_token(self) -> Token:
         token = self.peek_token()
-        self._current_pos += 1
+        self.current_pos += 1
         return token
 
     def reset(self, position: int) -> None:
-        self._current_pos = position
+        self.current_pos = position
 
     def mark(self) -> int:
-        return self._current_pos
+        return self.current_pos
 
     def peek_token(self) -> Optional[Token]:
-        if self._current_pos < len(self._tokens):
-            return self._tokens[self._current_pos + 1]
+        if self.current_pos < len(self.tokens):
+            return self.tokens[self.current_pos + 1]
+
+    def __iter__(self) -> Iterator[Token]:
+        yield from self.tokens
+
+    def __reversed__(self) -> Iterator[Token]:
+        yield from reversed(self.tokens)
 
 
 class Lexer:
     def __init__(
         self,
-        source: List[str],
+        source: IO,
         lexicon: Lexicon,
     ):
-        self._source = source.copy()
-        self.pos = 0
-
-        self.rules = None
-        self.keywords = None
-        self.symbols = None
-        self._lexicon = None
         self.lexicon = lexicon
-        self.parts = []
-        self._process_keywords(keywords=lexicon.keywords)
-        self._process_rules(rules=lexicon.rules)
-        self._process_symbols(symbols=lexicon.symbols)
         self._tokens = []
-
-        # pre check compilation
-        for part in self.parts:
-            try:
-                re.compile(part)
-            except Exception:
-                exc = format_exc()
-                msg = f"failed to compile phrase: {part}.\n"
-                print(f"Traceback:\n{exc}")
-                raise LexicalError(msg)
-
-        self._lexing_pattern = re.compile("|".join(self.parts))
-
-        self.run()
-
-    def mark(self):
-        return self.pos
-
-    def reset(self, pos):
-        self.pos = pos
+        self._process_source(source)
 
     @property
-    def lexicon(self) -> Lexicon:
-        return self._lexicon
-
-    @lexicon.setter
-    def lexicon(self, new_lexicon: Lexicon) -> None:
-        if isinstance(new_lexicon, Lexicon):
-            self._lexicon = new_lexicon
-            self.keywords = new_lexicon.keywords
-            self.symbols = new_lexicon.symbols
-            self.rules = new_lexicon.rules
-        else:
-            msg = f'Argument "new_lexicon" must be of Type[Lexicon],\
-                  received Type[{type(new_lexicon)}]'
-            raise LexicalError(msg)
-
-    @classmethod
-    def manual_parameters(
-        cls,
-        source: List[str],
-        rules: List[Tuple[str, str]],
-        keywords: List[str],
-        symbols: List[Tuple[str, str]],
-        **options,
-    ) -> "Lexer":
-        lexicon = Lexicon(keywords=keywords, symbols=symbols, rules=rules)
-        return cls(source, lexicon, **options)
-
-    @classmethod
-    def from_file(
-        cls, filepath: Path, lexicon: Lexicon, **options
-    ) -> Optional["Lexer"]:
-        mode = options.get("mode", "r")
-        with open(filepath, mode) as f:
-            source = f.readlines()
-            return cls(source=source, lexicon=lexicon, **options)
+    def tokenset(self) -> TokenSet:
+        return TokenSet(self._tokens)
 
     @property
     def tokens(self) -> List[Token]:
         return self._tokens
 
-    @property
-    def tokenset(self) -> TokenSet:
-        return TokenSet(self.tokens)
+    def _process_source(self, source: IO) -> None:
+        temp = tokenize.generate_tokens(source.readline)
+        self._process_tokens(temp)
 
-    def _process_symbols(self, symbols):
-        for kind, symbol in symbols.items():
-            pattern = f"(?P<{kind}>{symbol})"
-            self.parts.append(pattern)
+    def _process_tokens(self, tokens: List[tokenize.TokenInfo]) -> None:
+        for info in tokens:
+            lineno, start = info.start
+            _, end = info.end
+            kind = token_lookup.get(info.exact_type, "UNKNOWN")
+            category = token_lookup.get(info.type, "UNKNOWN")
+            text = info.string
+            if category == "NAME" and text in self.lexicon.keywords:
+                kind = text.upper()
 
-    def _process_keywords(self, keywords):
-
-        for word in keywords:
-            pattern = f"(?P<{word}>{word})"
-            self.parts.append(pattern)
-
-    def _process_rules(self, rules):
-        for word, pattern in rules.items():
-            group_pattern = f"(?P<{word}>{pattern})"
-            self.parts.append(group_pattern)
-
-    def run(self):
-        for lineno, line in enumerate(self._source):
-            regex_match = True
-            current_position = 0
-            while regex_match is not None:
-                regex_match = self._lexing_pattern.search(line, current_position)
-                if regex_match is not None:
-                    current_position = regex_match.end()
-                    hole = line[current_position : regex_match.start()]
-                    if hole:
-                        # hole found
-                        self._make_invalid_token(
-                            line, regex_match.start(), regex_match.end(), lineno
-                        )
-                    self._make_token(regex_match, lineno)
-
-    def _make_token(self, match, lineno):
-        text, kind = [
-            (text, kind) for kind, text in match.groupdict().items() if text is not None
-        ].pop()
-        token = Token(text=text, kind=kind, lineno=lineno, span=match.span())
-        self._tokens.append(token)
-
-    def _make_invalid_token(self, line, start, end, lineno):
-        text = line[start:end]
-        token = Token(text=text, kind="INVALID", lineno=lineno, span=(start, end))
-        self._tokens.append(token)
+            token = Token(text, kind, category, lineno, (start, end))
+            self._tokens.append(token)
