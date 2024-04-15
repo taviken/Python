@@ -1,10 +1,11 @@
 import re
-from typing import List, Dict, Tuple, Optional, Iterator, IO
+from typing import List, Dict, Union, Optional, Iterator, IO
 from collections import namedtuple, deque
 from dataclasses import dataclass
 from pathlib import Path
 from traceback import format_exc
 import tokenize
+import io
 
 Token = namedtuple("Token", ["text", "kind", "category", "lineno", "span"])
 
@@ -74,6 +75,13 @@ class Lexer:
         self.lexicon = lexicon
         self._tokens = []
         self._process_source(source)
+
+    @classmethod
+    def from_str(cls, source: Union[str, list], lexicon: Lexicon) -> Optional["Lexer"]:
+        if isinstance(source, list):
+            source = "".join(source)
+        io_string = io.StringIO(source)
+        return cls(io_string, lexicon)
 
     @property
     def tokenset(self) -> TokenSet:
