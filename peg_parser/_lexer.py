@@ -67,21 +67,21 @@ class TokenSet:
 
 
 class Lexer:
-    def __init__(
-        self,
-        source: IO,
-        lexicon: Lexicon,
-    ):
+    def __init__(self, source: IO, lexicon: Lexicon, **options):
         self.lexicon = lexicon
         self._tokens = []
+        self.skip_comment = options.get("skip_comment", False)
+
         self._process_source(source)
 
     @classmethod
-    def from_str(cls, source: Union[str, list], lexicon: Lexicon) -> Optional["Lexer"]:
+    def from_str(
+        cls, source: Union[str, list], lexicon: Lexicon, **options
+    ) -> Optional["Lexer"]:
         if isinstance(source, list):
             source = "".join(source)
         io_string = io.StringIO(source)
-        return cls(io_string, lexicon)
+        return cls(io_string, lexicon, **options)
 
     @property
     def tokenset(self) -> TokenSet:
@@ -97,6 +97,11 @@ class Lexer:
 
     def _process_tokens(self, tokens: List[tokenize.TokenInfo]) -> None:
         for info in tokens:
+            if self.skip_comment:
+                if info.type in (tokenize.NL, tokenize.COMMENT):
+                    continue
+            if info.type == tokenize.ERRORTOKEN and info.string.isspace():
+                continue
             lineno, start = info.start
             _, end = info.end
             kind = token_lookup.get(info.exact_type, "UNKNOWN")
