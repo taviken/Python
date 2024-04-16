@@ -1,9 +1,7 @@
-import re
 from typing import List, Dict, Union, Optional, Iterator, IO
-from collections import namedtuple, deque
+from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
-from traceback import format_exc
 import tokenize
 import io
 
@@ -73,6 +71,13 @@ class Lexer:
         self.skip_comment = options.get("skip_comment", False)
 
         self._process_source(source)
+
+    @classmethod
+    def from_file(
+        cls, file_path: Union[str, Path], lexicon: Lexicon, **options
+    ) -> Optional["Lexer"]:
+        with open(file_path, "r") as file_:
+            return cls(file_, lexicon, **options)
 
     @classmethod
     def from_str(
