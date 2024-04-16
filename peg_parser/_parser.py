@@ -2,11 +2,7 @@ from ._lexer import Lexer, Lexicon, _default_lexicon, TokenSet, Token
 from dataclasses import dataclass
 from typing import List, Optional, Any, Union
 from functools import wraps
-
-ENDMARKER = "ENDMARKER"
-STRING = "STRING"
-NAME = "NAME"
-NEWLINE = "NEWLINE"
+from tokenize import ENDMARKER, NAME, NEWLINE, STRING
 
 
 def memoize(func):
