@@ -2,6 +2,7 @@ from typing import List, Dict, Union, Optional, Iterator, IO
 from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
+from token import EXACT_TOKEN_TYPES
 import re
 import io
 
@@ -100,10 +101,21 @@ class Lexer:
                     start,end = match.span()
                     if pos < start:
                         self._make_unknown_token(line,lineno,pos,start)
-                    self._make_token(match,lineno,start,end,lexicon)
+                    self._make_token(match,lineno,lexicon)
                     pos = end
                 else:
                     pos+=1
+    
+    def _make_unknown_token(self, line,lineno,begin,end)->None:
+        token = Token(line[begin:end],'UNKNOWN',lineno,(begin,end))
+        self._tokens.append(token)
+    
+    def _make_token(self,match,lineno,lexicon)->None:
+        text,kind = self._get_data_from_group(match)
+        if text in lexicon.keywords:
+            kind='KEYWORD'
+        token = Token(match.group(),kind,lineno,match.span())
+        self._tokens.append(token)
 
         
 
@@ -119,8 +131,6 @@ class Lexer:
         # Note: we use unicode matching for names ("\w") but ascii matching for
         # number literals.
         Whitespace = r'[ \f\t]*'
-        Comment = r'#[^\r\n]*'
-        Ignore = Whitespace + any(r'\\\r?\n' + Whitespace) + maybe(Comment)
         Name = r'\w+'
 
         Hexnumber = r'0[xX](?:_?[0-9a-fA-F])+'
@@ -136,40 +146,13 @@ class Lexer:
         Imagnumber = group(r'[0-9](?:_?[0-9])*[jJ]', Floatnumber + r'[jJ]')
         Number = group(Imagnumber, Floatnumber, Intnumber)
 
-        # Return the empty string, plus all of the valid string prefixes.
-        def _all_string_prefixes():
-            # The valid string prefixes. Only contain the lower case versions,
-            #  and don't contain any permutations (include 'fr', but not
-            #  'rf'). The various permutations will be generated.
-            _valid_string_prefixes = ['b', 'r', 'u', 'f', 'br', 'fr']
-            # if we add binary f-strings, add: ['fb', 'fbr']
-            result = {''}
-            for prefix in _valid_string_prefixes:
-                for t in _itertools.permutations(prefix):
-                    # create a list with upper and lower versions of each
-                    #  character
-                    for u in _itertools.product(*[(c, c.upper()) for c in t]):
-                        result.add(''.join(u))
-            return result
+        comment = named_group('COMMENT',group(*list(lexicon.comments.values()))) if lexicon.comments else None
 
 
 
-        # Note that since _all_string_prefixes includes the empty string,
-        #  StringPrefix can be the empty string (making it optional).
-        StringPrefix = group(*_all_string_prefixes())
 
-        # Tail end of ' string.
-        Single = r"[^'\\]*(?:\\.[^'\\]*)*'"
-        # Tail end of " string.
-        Double = r'[^"\\]*(?:\\.[^"\\]*)*"'
-        # Tail end of ''' string.
-        Single3 = r"[^'\\]*(?:(?:\\.|'(?!''))[^'\\]*)*'''"
-        # Tail end of """ string.
-        Double3 = r'[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*"""'
-        Triple = group(StringPrefix + "'''", StringPrefix + '"""')
-        # Single-line ' or " string.
-        String = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
-                    StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
+        String = group( r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'",
+                    r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"')
 
         # Sorting in reverse order puts the long operators before their prefixes.
         # Otherwise if = came before ==, == would get recognized as two instances
@@ -177,24 +160,14 @@ class Lexer:
         Special = group(*map(re.escape, sorted(EXACT_TOKEN_TYPES, reverse=True)))
         Funny = group(r'\r?\n', Special)
 
-        PlainToken = group(Number, Funny, String, Name)
-        Token = Ignore + PlainToken
+        parts = (
+            comment,
+            Whitespace,
+           Hexnumber,
+Binnumber,
+Octnumber,
+Decnumber,
+            Name,
+        )
 
-        # First (or only) line of ' or " string.
-        ContStr = group(StringPrefix + r"'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
-                        group("'", r'\\\r?\n'),
-                        StringPrefix + r'"[^\n"\\]*(?:\\.[^\n"\\]*)*' +
-                        group('"', r'\\\r?\n'))
-        PseudoExtras = group(r'\\\r?\n|\Z', Comment, Triple)
-        PseudoToken = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name)
 
-        # For a given string prefix plus quotes, endpats maps it to a regex
-        #  to match the remainder of that string. _prefix can be empty, for
-        #  a normal single or triple quoted string (with no prefix).
-        endpats = {}
-        for _prefix in _all_string_prefixes():
-            endpats[_prefix + "'"] = Single
-            endpats[_prefix + '"'] = Double
-            endpats[_prefix + "'''"] = Single3
-            endpats[_prefix + '"""'] = Double3
-        del _prefix
