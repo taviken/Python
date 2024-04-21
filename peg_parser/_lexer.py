@@ -140,16 +140,14 @@ class Lexer:
 
     def _process_source(self, source: List[str], lexicon: Lexicon) -> None:
         for lineno, line in enumerate(source):
-            pos, max_len = 0, len(line)
-            while (match := self._pattern.search(line, pos)) and pos < max_len:
+            pos = 0
+            while match := self._pattern.search(line, pos):
                 if match:
                     start, end = match.span()
                     if pos < start:
                         self._make_unknown_token(line, lineno, pos, start)
                     self._make_token(match, lineno, lexicon)
                     pos = end
-                else:
-                    pos += 1
 
     def _make_unknown_token(self, line, lineno, begin, end) -> None:
         token = Token(line[begin:end], "UNKNOWN", lineno, (begin, end))
@@ -159,11 +157,11 @@ class Lexer:
         text, kind = self._get_data_from_group(match)
         if text in lexicon.keywords:
             kind = "KEYWORD"
-        token = Token(match.group(), kind, lineno, match.span())
+        token = Token(text, kind, lineno, match.span())
         self._tokens.append(token)
 
     def _get_data_from_group(self, match):
-        return [(k, v) for k, v in match.groupdict().items() if v][0]
+        return [(v, k) for k, v in match.groupdict().items() if v][0]
 
     def _super_pattern(self, lexicon: Lexicon):
         def group(*choices):
@@ -212,6 +210,9 @@ class Lexer:
             group(r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'", r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"'),
         )
 
+        ops = list(lexicon.operators.keys())
+        operators = named_group("operators", ops)
+
         parts = (
             comment,
             Whitespace,
@@ -221,6 +222,7 @@ class Lexer:
             Binnumber,
             Octnumber,
             Decnumber,
+            operators,
             Name,
             String,
         )
