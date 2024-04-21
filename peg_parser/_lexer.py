@@ -118,6 +118,7 @@ class Lexer:
             source = io_str.readlines()
 
         self._tokens = []
+
         self._pattern = self._super_pattern(lexicon)
         self._process_source(source, lexicon)
 
@@ -162,7 +163,7 @@ class Lexer:
         self._tokens.append(token)
 
     def _get_data_from_group(self, match):
-        return [(k, v) for k, v in match.groupdict() if v][0]
+        return [(k, v) for k, v in match.groupdict().items() if v][0]
 
     def _super_pattern(self, lexicon: Lexicon):
         def group(*choices):
@@ -196,7 +197,8 @@ class Lexer:
         Expfloat = r"[0-9](?:_?[0-9])*" + Exponent
         Floatnumber = named_group("floatnumber", group(Pointfloat, Expfloat))
         Imagnumber = named_group(
-            "imagnumber", group(r"[0-9](?:_?[0-9])*[jJ]", Floatnumber + r"[jJ]")
+            "imagnumber",
+            group(r"[0-9](?:_?[0-9])*[jJ]", group(Pointfloat, Expfloat) + r"[jJ]"),
         )
 
         comment = (
@@ -222,12 +224,13 @@ class Lexer:
             Name,
             String,
         )
-        parts = filter(None, parts)
-        for part in parts:
+        _parts = filter(None, parts)
+        for part in _parts:
             try:
                 _compile(part)
             except sre_pare_error:
                 msg = f"Failed to compile pattern: {part}"
                 raise LexicalError(msg)
 
-        return _compile("|".join(parts))
+        pattern = _compile("|".join(tuple(parts)))
+        return pattern

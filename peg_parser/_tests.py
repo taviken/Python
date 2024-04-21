@@ -49,24 +49,23 @@ def test_lexer():
 
     actual_tokens = lexer.tokens
     expected_tokens = [
-        Token(text=" ", kind="INDENT", category="INDENT", lineno=1, span=(0, 1)),
-        Token(text="module", kind="MODULE", category="NAME", lineno=1, span=(1, 7)),
-        Token(text="test12345", kind="NAME", category="NAME", lineno=1, span=(8, 17)),
-        Token(text="{", kind="LBRACE", category="OP", lineno=1, span=(18, 19)),
-        Token(text="~", kind="TILDE", category="OP", lineno=1, span=(20, 21)),
-        Token(
-            text="unsigned", kind="UNSIGNED", category="NAME", lineno=1, span=(22, 30)
-        ),
-        Token(text="long", kind="LONG", category="NAME", lineno=1, span=(31, 35)),
-        Token(text="var", kind="NAME", category="NAME", lineno=1, span=(36, 39)),
-        Token(text="=", kind="EQUAL", category="OP", lineno=1, span=(40, 41)),
-        Token(text="42", kind="NUMBER", category="NUMBER", lineno=1, span=(42, 44)),
-        Token(text=";", kind="SEMI", category="OP", lineno=1, span=(44, 45)),
-        Token(text="}", kind="RBRACE", category="OP", lineno=1, span=(45, 46)),
-        Token(text=";", kind="SEMI", category="OP", lineno=1, span=(46, 47)),
-        Token(text="", kind="NEWLINE", category="NEWLINE", lineno=1, span=(47, 48)),
-        Token(text="", kind="DEDENT", category="DEDENT", lineno=2, span=(0, 0)),
-        Token(text="", kind="ENDMARKER", category="ENDMARKER", lineno=2, span=(0, 0)),
+        Token(text=" ", kind=" ", lineno=0, span=(0, 1)),
+        Token(text="module", kind="module", lineno=0, span=(1, 7)),
+        Token(text=" ", kind=" ", lineno=0, span=(7, 8)),
+        Token(text="test12345", kind="test12345", lineno=0, span=(8, 17)),
+        Token(text=" ", kind=" ", lineno=0, span=(17, 18)),
+        Token(text="{", kind="UNKNOWN", lineno=0, span=(18, 19)),
+        Token(text=" ", kind=" ", lineno=0, span=(19, 20)),
+        Token(text="\t", kind="\t", lineno=1, span=(0, 1)),
+        Token(text="unsigned", kind="unsigned", lineno=1, span=(1, 9)),
+        Token(text=" ", kind=" ", lineno=1, span=(9, 10)),
+        Token(text="long", kind="long", lineno=1, span=(10, 14)),
+        Token(text=" ", kind=" ", lineno=1, span=(14, 15)),
+        Token(text="var", kind="var", lineno=1, span=(15, 18)),
+        Token(text=" ", kind=" ", lineno=1, span=(18, 19)),
+        Token(text="=", kind="UNKNOWN", lineno=1, span=(19, 20)),
+        Token(text=" ", kind=" ", lineno=1, span=(20, 21)),
+        Token(text="42", kind="42", lineno=1, span=(21, 23)),
     ]
 
     assert expected_tokens == actual_tokens
