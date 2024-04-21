@@ -1,5 +1,5 @@
 import pytest
-from peg_parser import Lexer, Token, Lexicon, GrammarParser, Rule
+from peg_parser import Lexer, Token, Lexicon, GrammarParser, Rule, default_lexicon
 
 ENDMARKER = "ENDMARKER"
 STRING = "STRING"
@@ -31,21 +31,21 @@ rules = {
 
 
 def test_lexer():
-    lexicon = Lexicon(
-        keywords=[
+    default_lexicon.keywords = (
+        [
             "long",
             "short",
             "unsigned",
             "module",
         ],
-        rules=rules,
     )
+
     source = [
         " module test12345 { ~",
         "\tunsigned long var = 42;",
         "};",
     ]
-    lexer = Lexer.from_str(source, lexicon)
+    lexer = Lexer(source, default_lexicon)
 
     actual_tokens = lexer.tokens
     expected_tokens = [

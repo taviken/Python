@@ -1,4 +1,4 @@
-from ._lexer import Lexer, Token, Lexicon
+from ._lexer import Lexer, Token, Lexicon, default_lexicon
 from ._parser import Parser, GrammarParser, Rule
 
 __all__ = [
@@ -8,4 +8,5 @@ __all__ = [
     "Parser",
     "GrammarParser",
     "Rule",
+    "default_lexicon",
 ]

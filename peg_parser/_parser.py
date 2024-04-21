@@ -1,4 +1,4 @@
-from ._lexer import Lexer, Lexicon, _default_lexicon, TokenSet, Token
+from ._lexer import Lexer, Lexicon, default_lexicon, TokenSet, Token
 from dataclasses import dataclass
 from typing import List, Optional, Any, Union
 from functools import wraps
