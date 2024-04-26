@@ -1,114 +1,14 @@
-from typing import List, Dict, Union, Optional, Iterator
-from collections import namedtuple
-from dataclasses import dataclass
+from typing import List, Union, Optional
+from _lexicon import Lexicon
 from pathlib import Path
 import re
 import io
 from sre_parse import error as sre_pare_error
-
-Token = namedtuple("Token", ["text", "kind", "lineno", "span"])
-
-
-EXACT_TOKEN_TYPES = {
-    "!": "EXCLAMATION",
-    "!=": "NOTEQUAL",
-    "%": "PERCENT",
-    "%=": "PERCENTEQUAL",
-    "&": "AMPER",
-    "&=": "AMPEREQUAL",
-    "(": "LPAR",
-    ")": "RPAR",
-    "*": "STAR",
-    "**": "DOUBLESTAR",
-    "**=": "DOUBLESTAREQUAL",
-    "*=": "STAREQUAL",
-    "+": "PLUS",
-    "+=": "PLUSEQUAL",
-    ",": "COMMA",
-    "-": "MINUS",
-    "-=": "MINEQUAL",
-    "->": "RARROW",
-    ".": "DOT",
-    "...": "ELLIPSIS",
-    "/": "SLASH",
-    "//": "DOUBLESLASH",
-    "//=": "DOUBLESLASHEQUAL",
-    "/=": "SLASHEQUAL",
-    ":": "COLON",
-    ":=": "COLONEQUAL",
-    ";": "SEMI",
-    "<": "LESS",
-    "<<": "LEFTSHIFT",
-    "<<=": "LEFTSHIFTEQUAL",
-    "<=": "LESSEQUAL",
-    "=": "EQUAL",
-    "==": "EQEQUAL",
-    ">": "GREATER",
-    ">=": "GREATEREQUAL",
-    ">>": "RIGHTSHIFT",
-    ">>=": "RIGHTSHIFTEQUAL",
-    "@": "AT",
-    "@=": "ATEQUAL",
-    "[": "LSQB",
-    "]": "RSQB",
-    "^": "CIRCUMFLEX",
-    "^=": "CIRCUMFLEXEQUAL",
-    "{": "LBRACE",
-    "|": "VBAR",
-    "|=": "VBAREQUAL",
-    "}": "RBRACE",
-    "~": "TILDE",
-}
-_operators = {v: k for k, v in EXACT_TOKEN_TYPES.items()}
-
-
-@dataclass
-class Lexicon:
-    keywords: List[str]
-    operators: Dict[str, str]
-    comments: Dict[str, str]
-
-
-default_lexicon = Lexicon(
-    keywords=[],
-    operators=_operators,
-    comments={
-        "LINE_COMMENT": r"//.*$",
-    },
-)
+from ._tokens import Token, TokenSet
 
 
 class LexicalError(Exception):
     pass
-
-
-class TokenSet:
-    tokens: List[Token]
-
-    def __init__(self, tokens: List[Token]):
-        self.tokens: List[Token] = tokens.copy()
-        self.current_pos: int = 0
-
-    def get_token(self) -> Token:
-        token = self.peek_token()
-        self.current_pos += 1
-        return token
-
-    def reset(self, position: int) -> None:
-        self.current_pos = position
-
-    def mark(self) -> int:
-        return self.current_pos
-
-    def peek_token(self) -> Optional[Token]:
-        if self.current_pos < len(self.tokens):
-            return self.tokens[self.current_pos + 1]
-
-    def __iter__(self) -> Iterator[Token]:
-        yield from self.tokens
-
-    def __reversed__(self) -> Iterator[Token]:
-        yield from reversed(self.tokens)
 
 
 class Lexer:
@@ -210,8 +110,8 @@ class Lexer:
             group(r"'[^\n'\\]*(?:\\.[^\n'\\]*)*'", r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"'),
         )
 
-        ops = list(lexicon.operators.keys())
-        operators = named_group("operators", ops)
+        operators = group(*map(re.escape, sorted(lexicon.operators, reverse=True)))
+        operators = named_group("operators", operators)
 
         parts = (
             comment,
