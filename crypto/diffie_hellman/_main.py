@@ -9,7 +9,7 @@ class Keys:
     public: Optional[int]
 
 
-class DiffeHellman:
+class DiffieHellman:
     def __init__(self, prime: int, g_root: int) -> None:
         self.prime = prime
         self.g_root = g_root

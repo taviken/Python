@@ -5,20 +5,19 @@ import json
 _this_dir = Path(__file__).parent
 
 with open(_this_dir / "modp.json", "r") as fd:
-    _modp_data = json.load(fd)
+    modp_data = json.load(fd)
 
 
-def post_proc_modp(modp):
+def _post_proc_modp(modp):
     for group_name, group in modp.items():
         for name, part in group.items():
             part = part.replace(" ", "")
             num = int(part, 16)
             group[name] = num
         modp[group_name] = group
-    return modp
 
 
-modp_data = post_proc_modp(_modp_data)
+_post_proc_modp(modp_data)
 
 
 @dataclass(frozen=True)

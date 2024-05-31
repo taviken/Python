@@ -17,7 +17,7 @@ _OAEP_padding = padding.OAEP(
 )
 
 
-class Crypt:
+class RSA:
     def __init__(self):
         self._private = rsa.generate_private_key(65537, 2048)
 
