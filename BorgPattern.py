@@ -1,6 +1,6 @@
 """Demonstration of the Borg pattern. Alternative solution to the singleton Pattern."""
 
-from typing import Tuple, Any
+from typing import Tuple, Any, Iterable
 
 
 class Hive:
@@ -31,7 +31,7 @@ class Drone(Hive):
     def __init__(self) -> None:
         super().__init__()
 
-    def __iter__(self) -> Tuple[Any, Any]:
+    def __iter__(self) -> Iterable[Tuple[Any, Any]]:
         """Yields key value tuple of the shared dict"""
         for k, v in self.__dict__.items():
             yield k, v

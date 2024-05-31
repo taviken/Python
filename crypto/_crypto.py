@@ -1,16 +1,20 @@
 """This module wraps basic cryptographic functions around the cryptography module"""
+
 import cryptography.hazmat.primitives.asymmetric.rsa as rsa
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.exceptions import *
+from cryptography.exceptions import InvalidSignature
 from collections import namedtuple
 
-public_key = namedtuple('public_key', ['n', 'e'])
+public_key = namedtuple("public_key", ["n", "e"])
 
-_PSS_padding = padding.PSS(mgf=padding.MGF1(hashes.SHA256()),
-                           salt_length=padding.PSS.MAX_LENGTH)
+_PSS_padding = padding.PSS(
+    mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
+)
 
-_OAEP_padding = padding.OAEP(mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None)
+_OAEP_padding = padding.OAEP(
+    mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None
+)
 
 
 class Crypt:
@@ -31,9 +35,7 @@ class Crypt:
 
     def sign(self, message: bytes):
         signature = self._private.sign(
-            data=message,
-            padding=_PSS_padding,
-            algorithm=hashes.SHA256()
+            data=message, padding=_PSS_padding, algorithm=hashes.SHA256()
         )
         return signature
 
@@ -41,23 +43,19 @@ class Crypt:
         pub = self._private.public_key()
         verified = True
         try:
-            pub.verify(signature=signature,
-                       data=message,
-                       padding=_PSS_padding,
-                       algorithm=hashes.SHA256())
+            pub.verify(
+                signature=signature,
+                data=message,
+                padding=_PSS_padding,
+                algorithm=hashes.SHA256(),
+            )
         except InvalidSignature:
             verified = False
         return verified
 
     def encrypt(self, message: bytes):
         pubkey = self._private.public_key()
-        return pubkey.encrypt(
-            plaintext=message,
-            padding=_OAEP_padding
-        )
+        return pubkey.encrypt(plaintext=message, padding=_OAEP_padding)
 
     def decrypt(self, ciphertext: bytes):
-        return self._private.decrypt(
-            ciphertext=ciphertext,
-            padding=_OAEP_padding
-        )
+        return self._private.decrypt(ciphertext=ciphertext, padding=_OAEP_padding)
