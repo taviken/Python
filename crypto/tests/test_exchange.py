@@ -12,8 +12,8 @@ def test_keyswap(modp):
     alice = DiffieHellman(prime=modp.p, g_root=modp.g)
     bob = DiffieHellman.from_modp(modp)
 
-    alice_public = alice.generate_public_key()
-    bob_public = bob.generate_public_key()
+    alice_public = alice._generate_public_key()
+    bob_public = bob._generate_public_key()
 
     alice.generate_secret_key(bob_public)
     bob.generate_secret_key(alice_public)
