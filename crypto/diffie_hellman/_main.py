@@ -21,7 +21,7 @@ class DiffieHellman:
     def __init__(self, prime: int, g_root: int) -> None:
 
         self._prime = prime
-        self._g_root = g_root
+        self._groot = g_root
         self._private = random.SystemRandom().randrange(g_root.bit_count() - 1)
         self.public = self._generate_public_key()
         self._secret: Optional[int] = None
@@ -38,7 +38,7 @@ class DiffieHellman:
         return cls(modp.p, modp.g)
 
     def _generate_public_key(self):
-        key = (self._g_root**self._private) % self._prime
+        key = (self._groot**self._private) % self._prime
         return key
 
     def generate_secret_key(self, public: int) -> None:
