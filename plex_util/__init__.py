@@ -27,7 +27,9 @@ def create_log(names: iter, log_path: Path):
 
 
 def get_names() -> iter:
-    files = [f for f in os.listdir(_this_dir) if os.path.isfile(f)]
+
+    files = [f for f in os.listdir(_this_dir.parent)]
+    # breakpoint()
     files = filter(lambda x: Path(x).suffix in allowed_suffixes, files)
     return files
 
@@ -52,7 +54,6 @@ def load_session() -> dict:
 
 def save_session(save_data: dict):
     with open(_session_file, "wb") as fp:
-        # breakpoint()
         pickle.dump(save_data, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -65,9 +66,7 @@ def main():
 
     names = get_names()
 
-    breakpoint()
     create_log(names, log_path)
-    breakpoint()
 
     data.update({"log_path": log_path, "version": __version__})
     save_session(data)
