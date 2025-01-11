@@ -51,8 +51,10 @@ class Wall:
                     block_color = self.block_colors["blue"]
                 elif block.strength == 2:
                     block_color = self.block_colors["green"]
-                else:
+                elif block.strength == 1:
                     block_color = self.block_colors["red"]
+                else:
+                    block_color = bg_color.rgb
                 pygame.draw.rect(screen, block_color, block.rect)
                 # draw 'border' using background color
                 pygame.draw.rect(screen, bg_color.rgb, (block.rect), 2)

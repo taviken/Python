@@ -4,6 +4,7 @@ from .colors import Rgba
 from .wall import Wall
 from .paddle import Paddle
 from .input import Input
+from .ball import Ball
 
 
 class Main:
@@ -28,6 +29,16 @@ class Main:
 
         self.wall = Wall(rows, columns, screen_width)
         self.paddle = Paddle(20, screen_width, screen_height, columns, 10)
+        self.ball = Ball(
+            10,
+            self.paddle.x + (self.paddle.width // 2),
+            self.paddle.y - self.paddle.height,
+            screen_width,
+            screen_height,
+            5,
+            5,
+        )
+
         self.input = Input()
 
     def run(self):
@@ -38,6 +49,13 @@ class Main:
 
             self.screen.fill(self.background_color.rgb)
             self.wall.draw_wall(self.screen, self.background_color)
+
+            # Handle ball
+            self.ball.draw(self.screen)
+            self.ball.move(self.paddle, self.wall)
+            self.running = not self.ball.out_of_bounds
+
+            # handle paddle
             self.paddle.draw(self.screen)
             self.paddle.move(self.input)
 
