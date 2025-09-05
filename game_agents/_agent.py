@@ -2,15 +2,10 @@ from dataclasses import dataclass, field
 from collections import namedtuple
 from typing import List
 from ._wugrb import WUBRG
+from ._personal_attrs import PersonalAtrrs
+from ._percent import Percent
 
 Name = namedtuple("Name", ["first", "middle", "last"])
-
-
-@dataclass
-class Percent:
-    current: float = 0.0
-    lower: float = 0.0
-    upper: float = 1.0
 
 
 @dataclass
@@ -26,5 +21,6 @@ class Agent:
     loyalty: Percent
     alleigance: str
     reputation: Reputation
+    personality: PersonalAtrrs
     allies: List["Agent"] = field(default_factory=list)
     alignment: WUBRG = WUBRG()
