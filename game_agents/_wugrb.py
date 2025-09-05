@@ -30,7 +30,7 @@ class WUBRG:
         return self.array.normalized
 
     @property
-    def white(self):
+    def white(self) -> float:
         """
         White seeks peace, and it tries to achieve that peace through the imposition
         of order. White believes that the solution to all suffering and unhappiness
@@ -53,7 +53,7 @@ class WUBRG:
         return self.asdict["white"]
 
     @property
-    def blue(self):
+    def blue(self) -> float:
         """
         Blue seeks perfection, and it tries to achieve that perfection through
         the pursuit of knowledge. Blue believes that things could be almost arbitrarily
@@ -82,7 +82,7 @@ class WUBRG:
         return self.asdict["blue"]
 
     @property
-    def black(self):
+    def black(self) -> float:
         """
         Black seeks satisfaction, and it tries to achieve that satisfaction through
         ruthlessness. Black wants power and agency so that it can act upon its
@@ -117,7 +117,7 @@ class WUBRG:
         return self.asdict["black"]
 
     @property
-    def red(self):
+    def red(self) -> float:
         """
         Red seeks freedom, and it tries to achieve that freedom through action.
         Red wants the ability to live in the moment and follow the thread of aliveness
@@ -147,7 +147,7 @@ class WUBRG:
         return self.asdict["red"]
 
     @property
-    def green(self):
+    def green(self) -> float:
         """
         Green seeks harmony, and it tries to achieve that harmony through acceptance.
         Green is the color of nature, wisdom, stoicism, taoism, and destiny; it
