@@ -22,5 +22,6 @@ class Agent:
     alleigance: str
     reputation: Reputation
     personality: PersonalAtrrs
+    monetary_goal: float
     allies: List["Agent"] = field(default_factory=list)
     alignment: WUBRG = WUBRG()
