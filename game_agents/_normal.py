@@ -1,5 +1,4 @@
 from typing import List, Tuple, Dict, Union
-import pandas as pd
 
 Categories = Union[List[str] | Tuple[str]]
 
