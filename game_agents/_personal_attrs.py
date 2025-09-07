@@ -6,7 +6,13 @@ class Allegiance:
     whom:str
     amount:int
     
-    
+
+@dataclass
+class Superstition:
+    category:str
+    amount: int
+
+
 @dataclass
 class PersonalAtrrs:
     strength: int
@@ -15,4 +21,5 @@ class PersonalAtrrs:
     constitution: int
     charisma: int
     wisdom: int
+    superstition:Superstition
     
