@@ -1,9 +1,13 @@
 
-def bayes(p_initial:float,
-        p_event_true:float,
-        p_event_false:float,
-        p_not_event:float):
-    p_H_p_eh = p_initial * p_event_true
-    p_nH_p_enh = p_not_event * p_event_false
+def p_bayes(p_h:float, # The prior
+        p_eh:float, # the probability of hypothesis given an event
+)->float:
+    """
+    Runs bayes theorem given the initial probabilty, 
+    """
+    p_enh = 1- p_h 
+    p_nh = 1 - p_eh
+    num = p_h * p_eh
+    denom = num + (p_nh*p_enh)
     
-    return p_H_p_eh / (p_H_p_eh + p_nH_p_enh)
+    return num / denom
