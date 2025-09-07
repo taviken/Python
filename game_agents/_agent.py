@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from collections import namedtuple
 from typing import List
 from ._wugrb import WUBRG
-from ._personal_attrs import PersonalAtrrs
+from ._personal_attrs import PersonalAtrrs, Allegiance
 from ._percent import Percent
 
 Name = namedtuple("Name", ["first", "middle", "last"])
@@ -19,7 +19,7 @@ class Reputation:
 class Agent:
     name: Name
     loyalty: Percent
-    alleigance: str
+    alleigance: Allegiance
     reputation: Reputation
     personality: PersonalAtrrs
     monetary_goal: float
