@@ -2,6 +2,12 @@ from dataclasses import dataclass
 
 
 @dataclass
+class Allegiance:
+    whom:str
+    amount:int
+    
+    
+@dataclass
 class PersonalAtrrs:
     strength: int
     intelligence: int
