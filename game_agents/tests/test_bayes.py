@@ -1,10 +1,10 @@
-from .._bayes import p_bayes
+from .._bayes import bayes
 
 def test_bayes():
     prob_of_disease = 1/1000 # prior
     prob_test_is_correct = 99/100
 
-    res = p_bayes(p_h = prob_of_disease,
+    res = bayes(p_h = prob_of_disease,
             p_eh= prob_test_is_correct,)
     percent = res *100
 
@@ -14,7 +14,7 @@ def test_bayes():
     new_prob = res
 
 
-    new_res = p_bayes(p_h = new_prob,
+    new_res = bayes(p_h = new_prob,
             p_eh= prob_test_is_correct,)
     percent = new_res *100
 
