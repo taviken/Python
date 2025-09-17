@@ -24,6 +24,11 @@ class Weights(Generic[T]):
     def probabilties(self)->Generator[Tuple[T],Tuple[int]]:
         return zip(*self._data)
     
+    def __eq__(self, other:"Weights")->bool:
+        if not isinstance(other, self.__class__):
+            raise ValueError("other must be of type 'Weights'")
+        return self._data == other._data
+    
 class Chain(Generic[T]):
     __slots__ = ("entries",)
     def __init__(self):
