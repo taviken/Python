@@ -14,5 +14,7 @@ def test_chain():
     chain.add("a","z")
     chain.add("b", "y")
     
-    expected = Weights()
+    expected = Weights({"z":1})
+    
+    assert chain["a"] == expected
     
