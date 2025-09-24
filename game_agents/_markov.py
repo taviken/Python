@@ -27,6 +27,10 @@ class Weights(Generic[T]):
         return zip(*self._data.items())
 
     @property
+    def as_dict(self) -> Dict:
+        return self._data
+
+    @property
     def probabilties(self) -> Iterable[Probabilities]:
         return iter(self)
 
@@ -40,18 +44,18 @@ class Weights(Generic[T]):
 
 
 class Chain(Generic[T]):
-    __slots__ = ("entries",)
+    __slots__ = ("_weights",)
 
     def __init__(self):
-        self.entries: Dict[T, Weights] = {}
+        self._weights: Dict[T, Weights] = {}
 
     def add(self, key: T, next_item: T) -> None:
-        weights = self.entries.get(key, Weights())
+        weights = self._weights.get(key, Weights())
         weights.add(next_item)
-        self.entries[key] = weights
+        self._weights[key] = weights
 
     def weights_by_key(self, key: T) -> Optional[Weights]:
-        return self.entries.get(key)
+        return self._weights.get(key)
 
     def __getitem__(self, key: T) -> Optional[Weights]:
         return self.weights_by_key(key)
