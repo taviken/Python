@@ -57,6 +57,7 @@ def test_find_greedy(setup2):
     a, b, c, d1, d2 = setup2
     expected = tuple(map(id, a.find_greedy("d", as_value=False)))
     assert expected == (id(d1), id(d2))
+    assert not bool(tuple(a.find_greedy("foo")))
 
 
 def test_find_lazy(setup2):
@@ -64,3 +65,4 @@ def test_find_lazy(setup2):
     res = a.find_lazy("d", as_value=False)
 
     assert id(res) == id(d1)
+    assert a.find_lazy("foo") is None
