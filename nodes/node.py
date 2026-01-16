@@ -24,9 +24,6 @@ def _format_tree_with_pipes(node: "Node", stream: IO, prefix="", is_last=True):
     while temp:
         child = temp.pop()
         _format_tree_with_pipes(child, stream, new_prefix, not bool(temp))
-    # for i, child in enumerate(node.children):
-    #     is_child_last = i == len(node.children) - 1
-    #     _format_tree_with_pipes(child, new_prefix, is_child_last)
 
 
 class Node:
