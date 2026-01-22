@@ -1,0 +1,1 @@
+antlr4 -Dlanguage=Python3 .\IDL.g4 -o .\generated\
