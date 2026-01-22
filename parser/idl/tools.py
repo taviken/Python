@@ -1,63 +1,65 @@
-from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
-from antlr4.error.ErrorListener import ErrorListener
-from antlr4.error.ErrorStrategy import BailErrorStrategy, ParseCancellationException
 from .generated.IDLLexer import IDLLexer
 from .generated.IDLParser import IDLParser
-from .python_listener import PythonListener
 
 
-class IdlParsingError(Exception):
+from .python_idl_listener import PythonIdlListener
+from antlr4 import InputStream, CommonTokenStream, ParseTreeWalker
+
+from antlr4.error.ErrorStrategy import BailErrorStrategy, ParseCancellationException
+from antlr4.error.ErrorListener import ErrorListener
+
+import sys
+
+
+class ParseError(Exception):
     def __init__(self, msg):
         super().__init__(msg)
 
 
-class IdlErrorListener(ErrorListener):
+class CustomErrorListener(ErrorListener):
     def __init__(self):
+        super().__init__()
         self.errors = []
 
     def syntaxError(
         self, recognizer, offendingSymbol, line, charPositionInLine, msg, e
     ):
-        # Collect error details
-        error_details = {
-            "line": line,
-            "charPositionInLine": charPositionInLine,
-            "msg": msg,
-            "offendingSymbol": offendingSymbol,
-        }
-        self.errors.append(error_details)
+        error_msg = f"line {line}:{charPositionInLine} {msg}"
+        self.errors.append(error_msg)
 
 
-def parseit(string: str):
-    input_stream = InputStream(string)
-    lexer = IDLLexer(input_stream)
-    token_stream = CommonTokenStream(lexer)
-    parser = IDLParser(token_stream)
+class MyErrorStrategy(BailErrorStrategy):
+    def recover(self, recognizer, e):
+        recognizer._errHandler.reportError(recognizer, e)
+        super().recover(recognizer, e)
 
-    error_listener = IdlErrorListener()
+
+def parseit(string):
+    error = CustomErrorListener()
+    lexer = IDLLexer(InputStream(string))
+    stream = CommonTokenStream(lexer)
+    parser = IDLParser(stream)
+
     lexer.removeErrorListeners()
-    lexer.addErrorListener(error_listener)
     parser.removeErrorListeners()
-    parser.addErrorListener(error_listener)
-
-    parser._errHandler = BailErrorStrategy()
+    lexer.addErrorListener(error)
+    parser.addErrorListener(error)
+    parser._errHandler = MyErrorStrategy()
 
     try:
         tree = parser.specification()
-    except ParseCancellationException:
-        errors = [err for err in error_listener.errors if error_listener.errors]
-        msg = f"Error in parsing: {errors}"
-        raise IdlParsingError(msg)
+    except ParseCancellationException as e:
+        lines = [err for err in error.errors if error.errors]
+        msg = f"Parseing error: {lines}"
+        raise ParseError(msg)
 
     walker = ParseTreeWalker()
-    listener = PythonListener()
-
+    listener = PythonIdlListener()
     walker.walk(listener, tree)
 
-    return listener.root
+    return listener.root_obj
 
 
 __all__ = [
-    "IdlParsingError",
     "parseit",
 ]
