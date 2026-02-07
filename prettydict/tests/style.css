@@ -1,0 +1,14 @@
+:root {
+    /* Enabling light mode and dark mode */
+    color-scheme: light dark;
+
+    /* Define semantic color tokens using light-dark() */
+    --text-color: light-dark(#333, #dfdfdf);
+    --background-color: light-dark(#dfdfdf, #222);
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.25s ease, color 0.25s ease; /* Smooth transition */
+}
